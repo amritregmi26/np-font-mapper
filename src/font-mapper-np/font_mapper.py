@@ -6,8 +6,11 @@ class FontMapper:
     def __init__(self) -> None:
         self.detector = DetectLanguage()
 
-    def is_unicode_nepali(self, text: str) -> bool:
+    def _is_unicode_nepali(self, text: str) -> bool:
         return len(list(text.encode('utf-8'))) > 1
+    
+    def get_available_fonts(self):
+        return list(self.get_rules()[0].keys())[2:] 
     
     def get_rules(self):
         with open('../data/data-map.json', 'r') as file:
@@ -41,8 +44,14 @@ class FontMapper:
         result = []
         for item in text.split(" "):
             if self.detector.detect_language(item) == 'ne-NP':
-                unicode_text = self._map_font(item)
-                result.append(unicode_text)
+                word = ""
+                for char in item: 
+                    if not self._is_unicode_nepali(char):
+                        unicode_text = self._map_font(char, font)
+                        word += unicode_text
+                    else:
+                        word += char
+                result.append(word)
             else:
                 result.append(item)
         return " ".join(result)
