@@ -7,7 +7,7 @@ name = "np-font-mapper"
 version = "1.0.0"
 description = "A python package that can be used to map ttf nepali fonts to utf while preserving the english words as well."
 authors = [{name = "Amrit Regmi", email = "amrregmi@gmail.com"}]
-license = "MIT"
+license = {text = "MIT"}
 readme = "README.md"
 keywords = ["font-mapper", "nepali-utf-to-ttf", "nepali-font-mapper", "preeti-to-unicode"]
 classifiers = [
