@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=40", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "np-font-mapper"
+version = "1.0.0"
+description = "A python package that can be used to map ttf nepali fonts to utf while preserving the english words as well."
+authors = [{name = "Amrit Regmi", email = "amrregmi@gmail.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["font-mapper", "nepali-utf-to-ttf", "nepali-font-mapper", "preeti-to-unicode"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+    "torch>=2.4.1",
+    "nltk>=3.9.1",
+    "Levenshtein>=0.25.1",
+    "sentence-transformers>=3.2.1"
+]
+requires-python = ">=3.8"
+
+[project.urls]
+Repository = "https://github.com/amritregmi26/np-font-mapper"
