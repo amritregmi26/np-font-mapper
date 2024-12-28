@@ -1,13 +1,31 @@
 import re
-from language_detection import DetectLanguage
-import data_map
+from .language_detection import DetectLanguage
+from . import data_map
 
 class FontMapper:
-    def __init__(self) -> None:
-        self.detector = DetectLanguage()
-        self.similarity_threshold = self.detector.similarity_threshold
-        self.rules = self.get_rules()  
-        self.available_fonts = self.get_available_fonts()  
+    def __init__(self, _similarity_threshold = 0.70) -> None:
+        self._similarity_threshold = _similarity_threshold
+        self._detector = DetectLanguage(similarity_threshold=self.similarity_threshold)
+        self.rules = self._get_rules()  
+        self.available_fonts = self._get_available_fonts()  
+
+    @property
+    def similarity_threshold(self) -> float:
+        """
+        Returns the similarity threshold used for language detection.
+        """
+        return self._similarity_threshold
+    
+    @similarity_threshold.setter
+    def similarity_threshold(self, value: float):
+        """
+        Sets the similarity threshold used for language detection.
+
+        Args:
+            value (float): The new similarity threshold value.
+        """
+        self._similarity_threshold = value
+        self._detector.similarity_threshold = value
 
     def _is_unicode_nepali(self, text: str) -> bool:
         """
@@ -21,13 +39,13 @@ class FontMapper:
         """
         return any('\u0900' <= char <= '\u097F' for char in text)
     
-    def get_available_fonts(self):
+    def _get_available_fonts(self):
         """
         Returns a list of available fonts for mapping.
         """
         return list(self.rules[0].keys())[2:] 
     
-    def get_rules(self):
+    def _get_rules(self):
         """
         Returns the list of font mapping rules.
         """
@@ -64,6 +82,28 @@ class FontMapper:
             mapped_text = re.sub(rule[0], rule[1], mapped_text)
         
         return mapped_text
+    
+    def _normalize_characters(self, input_string):
+        """
+        Rearranges the input string such that:
+        - 'l' or 'L' moves one step after the next letter.
+        - '{' moves one position before the current position.
+        This process helps to fix the problem related to इकार and र्
+        """
+        def _normalize_word(word):
+            chars = list(word)
+            i = 0
+            while i < len(chars):
+                if chars[i].lower() == 'l' and i < len(chars) - 1:
+                    chars[i], chars[i+1] = chars[i+1], chars[i]
+                    i += 2
+                elif chars[i] == '{' and i > 0:
+                    chars[i], chars[i-1] = chars[i-1], chars[i]
+                    i += 1
+                else:
+                    i += 1
+            return ''.join(chars)
+        return ' '.join(_normalize_word(word) for word in input_string.split())
 
     def map(self, text: str, font=None) -> str:
         """
@@ -77,8 +117,9 @@ class FontMapper:
             str: The text with mapped fonts for Nepali words, and original text for non-Nepali words.
         """
         result = []
-        for word in text.split(" "):
-            if self.detector.detect_language(word) == 'ne-NP':
+        normalized_text = self._normalize_characters(text)
+        for word in normalized_text.split(" "):
+            if self._detector.detect_language(word) == 'ne-NP':
                 mapped_word = []
                 for char in word: 
                     if not self._is_unicode_nepali(char):
@@ -88,5 +129,15 @@ class FontMapper:
                 result.append(''.join(mapped_word))
             else:
                 result.append(word)
+
+        for idx, word in enumerate(result):
+            has_english = re.search(r'[a-zA-Z]', word)
+            if has_english:
+                for rule in self.rules[0]['post-rules']:
+                    mapped_word = re.sub(rule[0], rule[1], word)
+                    has_english = re.search(r'[a-zA-Z]', mapped_word)
+                    if not has_english:
+                        result[idx] = mapped_word
+                        break
         
         return " ".join(result)

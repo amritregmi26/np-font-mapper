@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class DetectLanguage:
-    def __init__(self) -> None:
+    def __init__(self, similarity_threshold) -> None:
         try:
             english_words = nltk.corpus.words.words()
         except LookupError:
@@ -17,7 +17,7 @@ class DetectLanguage:
         
         self.words = set(word.lower() for word in english_words)
         self.embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        self.similarity_threshold = 0.70
+        self.similarity_threshold = similarity_threshold
 
     def _similar_words(self, query: str, k=10, length_margin=5) -> List[str]:
         """
