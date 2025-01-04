@@ -1,12 +1,11 @@
 import re
-from .language_detection import DetectLanguage
 from . import data_map
 
 class FontMapper:
     def __init__(self, _similarity_threshold = 0.70) -> None:
         self._similarity_threshold = _similarity_threshold
-        self._detector = DetectLanguage(similarity_threshold=self.similarity_threshold)
         self.rules = self._get_rules()  
+        self._detector = None
         self.available_fonts = self._get_available_fonts()  
 
     @property
@@ -25,7 +24,23 @@ class FontMapper:
             value (float): The new similarity threshold value.
         """
         self._similarity_threshold = value
-        self._detector.similarity_threshold = value
+        if self._detector:
+            self._detector.similarity_threshold = value
+
+    def initialize_detector(self):
+        """
+        Initializes the language detector.
+        """
+        self._detector = self._get_detector()
+
+    def _get_detector(self):
+        """
+        Lazily initializes and returns the language detector
+        """
+        if self._detector is None:
+            from .language_detection import DetectLanguage
+            self._detector = DetectLanguage(self._similarity_threshold)
+        return self._detector
 
     def _is_unicode_nepali(self, text: str) -> bool:
         """
@@ -105,23 +120,34 @@ class FontMapper:
             return ''.join(chars)
         return ' '.join(_normalize_word(word) for word in input_string.split())
 
-    def map(self, text: str, font=None) -> str:
+    def map(self, text: str, map_only=False, font=None) -> str:
         """
         Maps the input text to the specified font, handling each word individually and preserving non-Nepali words.
 
         Args:
             text (str): The input text to map.
+            map_only (bool, optional): If True, avoids language detection. Defaults to False.
             font (str, optional): The font to use for mapping. Defaults to None.
 
         Returns:
-            str: The text with mapped fonts for Nepali words, and original text for non-Nepali words.
+            str: The text with mapped fonts for Nepali words, and original text for non-Nepali words if map_only is False.
+
+        Raises:
+            ValueError: If language detection is required but the detector is uninitialized.
         """
+        if not map_only and not self._detector:
+            raise ValueError("Language detector is not initialized. Please call initialize_detector() first.")
+    
         result = []
         normalized_text = self._normalize_characters(text)
+
+        if not map_only:
+            detector = self._get_detector()
+
         for word in normalized_text.split(" "):
-            if self._detector.detect_language(word) == 'ne-NP':
+            if map_only or (detector and detector.detect_language(word) == 'ne-NP'):
                 mapped_word = []
-                for char in word: 
+                for char in word:
                     if not self._is_unicode_nepali(char):
                         mapped_word.append(self._map_font(char, font))
                     else:
@@ -139,5 +165,6 @@ class FontMapper:
                     if not has_english:
                         result[idx] = mapped_word
                         break
-        
+
         return " ".join(result)
+
