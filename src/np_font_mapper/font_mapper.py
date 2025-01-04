@@ -31,15 +31,15 @@ class FontMapper:
         """
         Initializes the language detector.
         """
-        self._detector = self._get_detector()
+        if self._detector is None:
+            from .language_detection import DetectLanguage
+            self._detector = DetectLanguage(self._similarity_threshold)
+        return self._detector
 
     def _get_detector(self):
         """
         Lazily initializes and returns the language detector
         """
-        if self._detector is None:
-            from .language_detection import DetectLanguage
-            self._detector = DetectLanguage(self._similarity_threshold)
         return self._detector
 
     def _is_unicode_nepali(self, text: str) -> bool:
