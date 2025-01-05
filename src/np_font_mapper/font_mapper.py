@@ -41,18 +41,6 @@ class FontMapper:
         Lazily initializes and returns the language detector
         """
         return self._detector
-
-    def _is_unicode_nepali(self, text: str) -> bool:
-        """
-        Checks if a given string contains Unicode Nepali characters.
-
-        Args:
-            text (str): The string to check for Nepali Unicode characters.
-
-        Returns:
-            bool: True if the text contains Nepali Unicode characters, False otherwise.
-        """
-        return any('\u0900' <= char <= '\u097F' for char in text)
     
     def _get_available_fonts(self):
         """
@@ -95,30 +83,8 @@ class FontMapper:
         
         for rule in self.rules[0]['post-rules']:
             mapped_text = re.sub(rule[0], rule[1], mapped_text)
-        
+
         return mapped_text
-    
-    def _normalize_characters(self, input_string):
-        """
-        Rearranges the input string such that:
-        - 'l' or 'L' moves one step after the next letter.
-        - '{' moves one position before the current position.
-        This process helps to fix the problem related to इकार and र्
-        """
-        def _normalize_word(word):
-            chars = list(word)
-            i = 0
-            while i < len(chars):
-                if chars[i].lower() == 'l' and i < len(chars) - 1:
-                    chars[i], chars[i+1] = chars[i+1], chars[i]
-                    i += 2
-                elif chars[i] == '{' and i > 0:
-                    chars[i], chars[i-1] = chars[i-1], chars[i]
-                    i += 1
-                else:
-                    i += 1
-            return ''.join(chars)
-        return ' '.join(_normalize_word(word) for word in input_string.split())
 
     def map(self, text: str, map_only=False, font=None) -> str:
         """
@@ -139,32 +105,14 @@ class FontMapper:
             raise ValueError("Language detector is not initialized. Please call initialize_detector() first.")
     
         result = []
-        normalized_text = self._normalize_characters(text)
-
         if not map_only:
             detector = self._get_detector()
 
-        for word in normalized_text.split(" "):
+        for word in text.split(" "):
             if map_only or (detector and detector.detect_language(word) == 'ne-NP'):
-                mapped_word = []
-                for char in word:
-                    if not self._is_unicode_nepali(char):
-                        mapped_word.append(self._map_font(char, font))
-                    else:
-                        mapped_word.append(char)
-                result.append(''.join(mapped_word))
+                result.append(self._map_font(word, font))
             else:
                 result.append(word)
-
-        for idx, word in enumerate(result):
-            has_english = re.search(r'[a-zA-Z]', word)
-            if has_english:
-                for rule in self.rules[0]['post-rules']:
-                    mapped_word = re.sub(rule[0], rule[1], word)
-                    has_english = re.search(r'[a-zA-Z]', mapped_word)
-                    if not has_english:
-                        result[idx] = mapped_word
-                        break
 
         return " ".join(result)
 
