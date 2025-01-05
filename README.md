@@ -35,6 +35,7 @@ from np_font_mapper import FontMapper
 mapper = FontMapper()
 
 # Optional: Adjust similarity threshold for language detection (default is 0.70)
+mapper.initialize_detector()
 mapper.similarity_threshold = 0.8
 
 # Basic usage - maps Preeti font to Unicode
@@ -98,15 +99,6 @@ class FontMapper:
 - Himali-TT
 - PCS-Nepali
 - Sagarmatha
-
-## Common Issues and Solutions
-
-1. **Incorrect Language Detection**:
-   - Adjust `similarity_threshold` based on your text length
-
-2. **Special Character Combinations**:
-   - The mapper handles special cases like "पm" → "फ"
-   - If you find any incorrect mappings, please report them
 
 ## Contributing
 
