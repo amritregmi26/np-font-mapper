@@ -17,10 +17,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 dependencies = [
-    "torch>=2.4.1",
     "nltk>=3.9.1",
-    "Levenshtein>=0.25.1",
-    "sentence-transformers>=3.2.1"
+    "Levenshtein>=0.25.1"
 ]
 requires-python = ">=3.8"
 
