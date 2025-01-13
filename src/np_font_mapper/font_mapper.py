@@ -108,7 +108,7 @@ class FontMapper:
         if not map_only:
             detector = self._get_detector()
 
-        for word in text.split(" "):
+        for word in text.split():
             if map_only or (detector and detector.detect_language(word) == 'ne-NP'):
                 result.append(self._map_font(word, font))
             else:
